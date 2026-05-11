@@ -1,15 +1,17 @@
 name: Deploy CMS to server
 
 # Auto-deploy on push to main. Rsyncs the repo to your server over SSH.
-# Set up these repository secrets (Settings → Secrets and variables → Actions):
+# Configure these repo secrets to actually deploy:
 #
 #   SSH_HOST       e.g. kironatomtellian.com
 #   SSH_USER       e.g. deploy
-#   SSH_KEY        private SSH key (the matching public key in ~/.ssh/authorized_keys on the server)
+#   SSH_KEY        private SSH key (matching public key in ~/.ssh/authorized_keys on the server)
 #   SSH_PORT       optional, defaults to 22
 #   DEPLOY_PATH    absolute path on the server, e.g. /var/www/cms
 #
-# config.php on the server is preserved — it is excluded from the rsync.
+# Until the secrets are set, the workflow runs cleanly and just reports
+# "secrets not configured" — it doesn't fail. config.php on the server is
+# preserved (excluded from rsync).
 
 on:
   push:
@@ -27,17 +29,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check for deploy secrets
+        id: cfg
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ] || [ -z "$DEPLOY_PATH" ]; then
+            echo "::notice::Deploy secrets not configured — skipping rsync. Set SSH_HOST / SSH_USER / SSH_KEY / DEPLOY_PATH under Settings → Secrets and variables → Actions. See DEPLOY.md."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up SSH
+        if: steps.cfg.outputs.skip != 'true'
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          PORT="${{ secrets.SSH_PORT }}"
-          PORT="${PORT:-22}"
-          ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          PORT="${SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           echo "SSH_PORT=$PORT" >> "$GITHUB_ENV"
 
       - name: Rsync to server
+        if: steps.cfg.outputs.skip != 'true'
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_deploy -p $SSH_PORT -o StrictHostKeyChecking=yes" \
@@ -46,4 +72,4 @@ jobs:
             --exclude 'config.php' \
             --exclude '*.log' \
             --exclude 'node_modules/' \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
