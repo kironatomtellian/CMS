@@ -1,0 +1,49 @@
+name: Deploy CMS to server
+
+# Auto-deploy on push to main. Rsyncs the repo to your server over SSH.
+# Set up these repository secrets (Settings → Secrets and variables → Actions):
+#
+#   SSH_HOST       e.g. kironatomtellian.com
+#   SSH_USER       e.g. deploy
+#   SSH_KEY        private SSH key (the matching public key in ~/.ssh/authorized_keys on the server)
+#   SSH_PORT       optional, defaults to 22
+#   DEPLOY_PATH    absolute path on the server, e.g. /var/www/cms
+#
+# config.php on the server is preserved — it is excluded from the rsync.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cms
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          PORT="${{ secrets.SSH_PORT }}"
+          PORT="${PORT:-22}"
+          ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          echo "SSH_PORT=$PORT" >> "$GITHUB_ENV"
+
+      - name: Rsync to server
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_deploy -p $SSH_PORT -o StrictHostKeyChecking=yes" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'config.php' \
+            --exclude '*.log' \
+            --exclude 'node_modules/' \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"

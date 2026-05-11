@@ -156,6 +156,30 @@ should reflect your change immediately. Then hit **Publish to website** — it
 should run `npm ci && npm run build` and atomically swap `dist/` into the web
 root. The output log appears in a dialog; close it when done.
 
+## Auto-deploy from GitHub
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which rsyncs the
+repo over SSH to the server. To set it up once:
+
+1. On the server, create a deploy user (or use an existing one) and put your
+   public key in `~/.ssh/authorized_keys`. The user needs write access to the
+   target directory (e.g. `/var/www/cms`).
+2. In the CMS repo on GitHub, go to **Settings → Secrets and variables → Actions**
+   and add:
+
+   | Secret | Value |
+   | --- | --- |
+   | `SSH_HOST` | e.g. `kironatomtellian.com` |
+   | `SSH_USER` | the deploy user |
+   | `SSH_KEY` | the matching **private** key (paste the whole PEM) |
+   | `SSH_PORT` | optional, defaults to 22 |
+   | `DEPLOY_PATH` | absolute path on the server, e.g. `/var/www/cms` |
+
+3. Push to `main`. The Actions tab will show the deploy progress.
+
+`config.php` on the server is **not** overwritten — it's in the rsync exclude
+list, so the deploy user's password/secret stay put.
+
 ## Backups / versioning
 
 The CMS writes JSON in place — it does not commit anything to git. To keep a
