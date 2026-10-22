@@ -33,6 +33,15 @@ if (!empty($schema['root_is_list'])) {
     }
 }
 
+// Concerts: the display date always follows the ISO date.
+if (in_array($key, ['concerts-upcoming', 'concerts-past'], true)) {
+    foreach ($data as $i => $c) {
+        if (is_array($c) && !empty($c['date'])) {
+            $data[$i]['displayDate'] = display_date((string)$c['date']);
+        }
+    }
+}
+
 try {
     $mtime = data_save($key, $data);
     json_response(['ok' => true, 'mtime' => $mtime]);

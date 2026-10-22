@@ -273,8 +273,8 @@
         },
       });
       itemNodes.push(entry);
-      const addRow = listBox.querySelector(".list__add");
-      if (addRow) listBox.insertBefore(entry.node, addRow);
+      // Only this list's own add bar: a nested list inside an item has one too.
+      if (addRow && addRow.parentNode === listBox) listBox.insertBefore(entry.node, addRow);
       else listBox.append(entry.node);
       refreshLabels();
     }
@@ -514,6 +514,26 @@
       e.preventDefault();
       e.returnValue = "";
     }
+  });
+
+  // --- Today: one-click spelling fixes -----------------------------------
+
+  document.querySelectorAll('[data-action="fix"]').forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        const r = await api("/api/fix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: btn.dataset.key, wrong: btn.dataset.wrong, right: btn.dataset.right }),
+        });
+        toast(`Fixed in ${r.changed} place${r.changed === 1 ? "" : "s"}. Publish to put it live.`, "ok");
+        btn.closest(".issue")?.remove();
+      } catch (e) {
+        btn.disabled = false;
+        toast("Fix failed: " + e.message, "err");
+      }
+    });
   });
 
   // --- Publish -------------------------------------------------------------

@@ -8,5 +8,9 @@ if (auth_attempt((string)$password)) {
     header('Location: ' . url('/'));
     exit;
 }
-header('Location: ' . url('/login?err=' . urlencode('Wrong password.')));
+$wait = auth_locked_for();
+$msg = $wait > 0
+    ? 'Too many wrong passwords. Try again in ' . (int)ceil($wait / 60) . ' minutes.'
+    : 'Wrong password.';
+header('Location: ' . url('/login?err=' . urlencode($msg)));
 exit;

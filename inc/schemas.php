@@ -179,28 +179,29 @@ function gallery_photo_fields(): array {
 }
 
 function concert_fields(): array {
+    // Kept to what the schedule shows. The display date ("May 5, 2027") is
+    // written from the date on save, so there is nothing to keep in sync.
     return [
         'fields' => [
-            ['key' => 'date', 'type' => 'date', 'label' => 'Date (ISO)'],
-            ['key' => 'displayDate', 'type' => 'text', 'label' => 'Display date', 'placeholder' => 'May 21, 2026'],
-            ['key' => 'venue', 'type' => 'text', 'label' => 'Venue'],
-            ['key' => 'programme', 'type' => 'text', 'label' => 'Programme'],
-            ['key' => 'ticketsUrl', 'type' => 'text', 'label' => 'Tickets URL', 'optional' => true],
-            ['key' => 'type', 'type' => 'select', 'label' => 'Type', 'optional' => true, 'options' => [
-                ['', '— unspecified —'],
-                ['orchestra', 'Orchestra'],
-                ['recital', 'Recital'],
-                ['chamber', 'Chamber'],
+            ['key' => 'date', 'type' => 'date', 'label' => 'Date'],
+            ['key' => 'type', 'type' => 'select', 'label' => 'Kind', 'optional' => true, 'options' => [
+                ['recital', 'Solo recital'],
+                ['orchestra', 'With orchestra'],
+                ['chamber', 'Chamber music'],
+                ['', 'Other'],
             ]],
-            ['key' => 'orchestra', 'type' => 'text', 'label' => 'Orchestra name', 'optional' => true, 'help' => 'For orchestra type only.'],
-            ['key' => 'conductor', 'type' => 'text', 'label' => 'Conductor', 'optional' => true, 'help' => 'For orchestra type only.'],
+            ['key' => 'city', 'type' => 'text', 'label' => 'City', 'optional' => true, 'placeholder' => 'Vienna'],
+            ['key' => 'venue', 'type' => 'text', 'label' => 'Hall, country', 'placeholder' => 'Musikverein Vienna, Austria'],
+            ['key' => 'programme', 'type' => 'textarea', 'label' => 'Programme', 'rows' => 2, 'placeholder' => 'To be announced'],
+            ['key' => 'orchestra', 'type' => 'text', 'label' => 'Orchestra', 'optional' => true],
+            ['key' => 'conductor', 'type' => 'text', 'label' => 'Conductor', 'optional' => true],
             ['key' => 'chamberPartners', 'type' => 'list', 'label' => 'Chamber partners', 'item_label' => 'Partner', 'optional' => true, 'item' => [
                 'fields' => [
                     ['key' => 'name', 'type' => 'text', 'label' => 'Name'],
                     ['key' => 'instrument', 'type' => 'text', 'label' => 'Instrument'],
                 ],
             ]],
-            ['key' => 'notes', 'type' => 'textarea', 'label' => 'Notes', 'optional' => true, 'rows' => 2],
+            ['key' => 'ticketsUrl', 'type' => 'text', 'label' => 'Ticket link', 'optional' => true, 'placeholder' => 'Leave empty if not on sale yet'],
         ],
     ];
 }
