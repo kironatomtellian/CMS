@@ -33,6 +33,35 @@ if (!empty($schema['root_is_list'])) {
     }
 }
 
+// Concerts: the display date always follows the ISO date.
+if (in_array($key, ['concerts-upcoming', 'concerts-past'], true)) {
+    foreach ($data as $i => $c) {
+        if (is_array($c) && !empty($c['date'])) {
+            $data[$i]['displayDate'] = display_date((string)$c['date']);
+        }
+    }
+}
+
+// Lists that read by date are kept in date order, whatever order they were typed in.
+$sort = $schema['sort'] ?? null;
+if ($sort && is_array($data)) {
+    usort($data, function ($a, $b) use ($sort) {
+        $cmp = strcmp((string)($a['date'] ?? ''), (string)($b['date'] ?? ''));
+        return $sort === 'date-desc' ? -$cmp : $cmp;
+    });
+}
+
+// Gallery photos carry their pixel size so the page can lay out before they load.
+if ($key === 'gallery' && isset($data['photos']) && is_array($data['photos'])) {
+    foreach ($data['photos'] as $i => $photo) {
+        $size = is_array($photo) ? site_image_size((string)($photo['src'] ?? '')) : null;
+        if ($size) {
+            $data['photos'][$i]['width'] = $size[0];
+            $data['photos'][$i]['height'] = $size[1];
+        }
+    }
+}
+
 try {
     $mtime = data_save($key, $data);
     json_response(['ok' => true, 'mtime' => $mtime]);

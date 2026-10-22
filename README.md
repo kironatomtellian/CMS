@@ -9,15 +9,22 @@ site and atomically swaps it into the web root.
 
 Each editor maps 1:1 to a file in `apps/public/src/data/` on the website repo:
 
-| Section | File |
-| --- | --- |
-| Home | `home.json` |
-| About / biography | `about.json` |
-| Upcoming concerts | `concerts-upcoming.json` |
-| Past concerts | `concerts-past.json` |
-| Gallery | `gallery.json` |
-| Media | `media.json` |
-| Press | `press.json` |
+| Section | File | Page on the site |
+| --- | --- | --- |
+| Home | `home.json` | `/` |
+| Schedule | `concerts-upcoming.json` | `/schedule` |
+| Past concerts | `concerts-past.json` | `/schedule-archive` |
+| Biography | `about.json` | `/about` |
+| Press | `press.json` | `/press` |
+| Media | `media.json` | `/media` |
+| Gallery | `gallery.json` | `/gallery` |
+| Contact (also the footer) | `contact.json` | `/contact` |
+| For presenters | `presenters.json` | `/presenters` |
+
+Fields the forms don't show are kept as they are when you save, so nothing the
+site reads is lost. Concert lists are saved in date order, and gallery photos
+get their pixel size from the file. Long lists open folded with a one-line
+summary and a search box; Cmd/Ctrl+S saves.
 
 Save → the JSON is rewritten in-place on disk.
 Publish → `npm ci && npm run build` runs inside `apps/public/`, and the new

@@ -2,26 +2,27 @@
 
 /* ---- Tokens ------------------------------------------------------------- */
 :root {
-  --bg: #fafaf7;
+  /* "Black Key" — shared with the public site. */
+  --bg: #f7f5f0;
   --surface: #ffffff;
-  --surface-2: #f4f3ee;
-  --ink: #111111;
-  --ink-2: #4b4b48;
-  --ink-3: #7c7b76;
-  --line: #e6e4dc;
-  --line-strong: #d2cfc4;
-  --accent: #0c5e3a;
-  --accent-hover: #094a2d;
-  --accent-soft: #e6f1ea;
+  --surface-2: #efebe3;
+  --ink: #0b0b0b;
+  --ink-2: #3d3933;
+  --ink-3: #5c574f;
+  --line: rgba(11, 11, 11, 0.1);
+  --line-strong: rgba(11, 11, 11, 0.25);
+  --accent: #c7321a;
+  --accent-hover: #a82913;
+  --accent-soft: #fbe6e1;
   --danger: #9b2014;
   --danger-soft: #f7e3df;
-  --warn: #8a6a00;
+  --warn: #8a5a00;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.03), 0 6px 24px -10px rgba(20, 20, 20, 0.12);
-  --radius: 10px;
-  --radius-sm: 6px;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Iowan Old Style", "Apple Garamond", Baskerville, "Times New Roman", serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --font-body: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Instrument Serif", "Iowan Old Style", Baskerville, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 /* ---- Reset-ish ---------------------------------------------------------- */
@@ -223,7 +224,17 @@ pre {
   font-size: 13px;
   color: var(--ink-2);
 }
-.list__item-head strong { color: var(--ink); font-weight: 500; }
+.list__item-head { cursor: pointer; gap: 12px; }
+.list__item-head strong { color: var(--ink); font-weight: 500; white-space: nowrap; }
+.list__item-summary {
+  flex: 1; min-width: 0;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  color: var(--ink-3);
+}
+.list__item--folded > .list__item-body { display: none; }
+.list__item--folded > .list__item-head { border-bottom: 0; }
+.list__search { margin-bottom: 8px; }
+.field__count { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
 .list__item-body { padding: 14px 14px 4px; }
 .list__item-actions { display: flex; gap: 4px; align-items: center; }
 .icon-btn {
@@ -352,3 +363,100 @@ pre {
 .dialog__title { margin: 0; font-family: var(--font-display); font-size: 18px; font-weight: 600; }
 .dialog__body { padding: 18px 22px; overflow: auto; flex: 1; }
 .dialog__foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+
+
+/* ---- Black Key overrides ------------------------------------------------ */
+body { font-size: 16px; }
+
+.topbar {
+  background: #0b0b0b;
+  color: #efebe3;
+  border-bottom: 0;
+}
+.topbar__brand {
+  font-family: "Libre Caslon Display", var(--font-display);
+  font-weight: 400;
+  font-size: 20px;
+}
+
+/* The menu and the Save bar stay in view while a long form scrolls. */
+.editor .panel__head {
+  position: sticky;
+  top: 68px;
+  z-index: 10;
+  margin: -28px -28px 24px;
+  padding: 20px 28px 16px;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.topbar__brand span {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 11px;
+  color: #a39e95;
+  margin-left: 4px;
+}
+.topbar__nav a { color: #efebe3; min-height: 40px; display: inline-flex; align-items: center; }
+.topbar__nav a:hover { background: #2a2826; color: #ffffff; }
+.topbar__nav a[aria-current="page"] { background: #2a2826; color: #ffffff; }
+.topbar .btn--ghost { color: #efebe3; border-color: rgba(239, 235, 227, 0.35); }
+
+.page { max-width: 1120px; }
+.panel__title { font-family: var(--font-display); font-weight: 400; font-size: 48px; line-height: 1; }
+
+/* Large fields, so nothing needs scrolling inside a box. */
+.field__label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.field__input, .field__select { min-height: 52px; font-size: 17px; padding: 12px 14px; }
+.field__textarea { font-size: 17px; padding: 14px; min-height: 120px; }
+
+/* Today */
+.today__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin: 24px 0 40px;
+}
+.today__label {
+  display: block;
+  margin: 0 0 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.today__label--spaced { margin-top: 8px; }
+.today__next {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: #0b0b0b;
+  color: #efebe3;
+}
+.today__next:hover { color: #efebe3; outline: 2px solid var(--accent); }
+.today__next .today__label { color: #a39e95; }
+.today__city { font-family: var(--font-display); font-size: 40px; line-height: 1; }
+.today__meta { font-size: 15px; color: #c9c3b8; }
+.today__needs {
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.today__ok { margin: 0; color: var(--ink-2); }
+.issues { list-style: none; margin: 0; padding: 0; }
+.issue {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 16px;
+}
+.issue--info { color: var(--ink-3); }
+.btn--small { min-height: 36px; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--accent); }

@@ -60,6 +60,11 @@ function publish_steps(array &$log): void {
         throw new RuntimeException('Web root parent does not exist: ' . dirname($webRoot));
     }
 
+    $moved = archive_past_concerts();
+    if ($moved) {
+        $log[] = "✓ Moved $moved past concert(s) to the archive.";
+    }
+
     if (!empty($config['publish']['git_pull'])) {
         $run("$git pull --ff-only", $repoRoot);
     }

@@ -34,6 +34,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/data.php';
 require_once __DIR__ . '/schemas.php';
 require_once __DIR__ . '/render.php';
+require_once __DIR__ . '/checks.php';
 
 /**
  * Tiny HTML escape helper.

@@ -19,12 +19,14 @@ function render_layout(string $title, callable $bodyFn, array $opts = []): void 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><?= h($title) ?> — Kiron Atom Tellian CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libre+Caslon+Display&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="<?= h(url('/assets/css/app.css')) ?>">
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>·</text></svg>">
 </head>
 <body<?= $bodyAttr ? ' ' . $bodyAttr : '' ?>>
   <header class="topbar">
-    <a class="topbar__brand" href="<?= h(url('/')) ?>">Kiron · CMS</a>
+    <a class="topbar__brand" href="<?= h(url('/')) ?>">Kiron Atom Tellian <span>CMS</span></a>
     <nav class="topbar__nav">
       <?php foreach (nav_items() as $item): ?>
         <a href="<?= h(url($item['href'])) ?>"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>><?= h($item['label']) ?></a>
@@ -32,6 +34,9 @@ function render_layout(string $title, callable $bodyFn, array $opts = []): void 
     </nav>
     <div class="topbar__right">
       <button type="button" class="btn btn--primary" id="publishBtn" data-action="publish">Publish to website</button>
+      <?php if (site_url()): ?>
+        <a class="btn btn--ghost" href="<?= h(site_url()) ?>" target="_blank" rel="noopener">View site ↗</a>
+      <?php endif; ?>
       <a class="btn btn--ghost" href="<?= h(url('/logout')) ?>">Log out</a>
     </div>
   </header>
@@ -51,14 +56,17 @@ function render_layout(string $title, callable $bodyFn, array $opts = []): void 
 }
 
 function nav_items(): array {
-    return [
-        ['key' => 'dashboard', 'href' => '/', 'label' => 'Overview'],
-        ['key' => 'home', 'href' => '/edit/home', 'label' => 'Home'],
-        ['key' => 'about', 'href' => '/edit/about', 'label' => 'About'],
-        ['key' => 'concerts-upcoming', 'href' => '/edit/concerts-upcoming', 'label' => 'Upcoming'],
-        ['key' => 'concerts-past', 'href' => '/edit/concerts-past', 'label' => 'Past'],
-        ['key' => 'gallery', 'href' => '/edit/gallery', 'label' => 'Gallery'],
-        ['key' => 'media', 'href' => '/edit/media', 'label' => 'Media'],
-        ['key' => 'press', 'href' => '/edit/press', 'label' => 'Press'],
-    ];
+    // Same order as the website's menu.
+    $items = [['key' => 'dashboard', 'href' => '/', 'label' => 'Today']];
+    foreach (schemas() as $key => $schema) {
+        $items[] = ['key' => $key, 'href' => '/edit/' . $key, 'label' => $schema['nav'] ?? $schema['title']];
+    }
+    return $items;
+}
+
+/** Public address of the website, from config, without a trailing slash. Empty when not set. */
+function site_url(string $path = ''): string {
+    global $config;
+    $base = rtrim((string)($config['site_url'] ?? ''), '/');
+    return $base === '' ? '' : $base . $path;
 }

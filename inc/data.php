@@ -61,3 +61,14 @@ function data_mtime(string $key): int {
     $path = data_file_path($key);
     return file_exists($path) ? (int)filemtime($path) : 0;
 }
+
+/** Pixel size of an image the site serves at `/img/...`, or null when it can't be read. */
+function site_image_size(string $src): ?array {
+    global $config;
+    if ($src === '' || $src[0] !== '/' || strpos($src, '..') !== false) {
+        return null;
+    }
+    $path = rtrim($config['paths']['site_repo'], '/') . '/apps/public/public' . $src;
+    $info = is_file($path) ? @getimagesize($path) : false;
+    return $info ? [(int)$info[0], (int)$info[1]] : null;
+}
