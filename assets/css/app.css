@@ -374,10 +374,21 @@ body { font-size: 16px; }
   border-bottom: 0;
 }
 .topbar__brand {
+  font-family: "Libre Caslon Display", var(--font-display);
   font-weight: 400;
-  font-size: 22px;
+  font-size: 20px;
 }
-.topbar__brand em { font-style: italic; }
+
+/* The menu and the Save bar stay in view while a long form scrolls. */
+.editor .panel__head {
+  position: sticky;
+  top: 68px;
+  z-index: 10;
+  margin: -28px -28px 24px;
+  padding: 20px 28px 16px;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
 .topbar__brand span {
   font-family: var(--font-mono);
   font-style: normal;

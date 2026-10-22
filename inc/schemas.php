@@ -57,7 +57,6 @@ function schemas(): array {
                     ['key' => 'lead', 'type' => 'object', 'label' => 'Big quote', 'fields' => lead_quote_fields()],
                     ['key' => 'others', 'type' => 'list', 'label' => 'Three smaller quotes', 'item_label' => 'Quote', 'item' => press_quote_fields()],
                 ]],
-                ['key' => 'seasonIntro', 'type' => 'textarea', 'label' => 'Concerts intro', 'rows' => 2, 'help' => 'Short line next to the "Concerts" heading. The concerts themselves come from Schedule.'],
                 ['key' => 'secondaryImage', 'type' => 'object', 'label' => 'Full-width photo after the concerts', 'fields' => image_pair_fields()],
                 ['key' => 'pressCycle', 'type' => 'list', 'label' => 'Rotating quotes', 'item_label' => 'Quote', 'item' => press_quote_fields()],
                 ['key' => 'bio', 'type' => 'list', 'label' => 'Biography teaser', 'item_label' => 'Paragraph', 'item' => [
@@ -112,6 +111,11 @@ function schemas(): array {
                     ['key' => 'imageAlt', 'type' => 'text', 'label' => 'Photo description'],
                 ]],
                 ['key' => 'intro', 'type' => 'object', 'label' => 'Quote in the side column', 'fields' => press_quote_fields()['fields']],
+                ['key' => 'download', 'type' => 'object', 'label' => 'Download card', 'fields' => [
+                    ['key' => 'label', 'type' => 'text', 'label' => 'Button text', 'placeholder' => 'Download biography'],
+                    ['key' => 'note', 'type' => 'text', 'label' => 'Small line above', 'placeholder' => 'PDF · A4 · season 2026/27'],
+                    ['key' => 'file', 'type' => 'text', 'label' => 'File', 'placeholder' => '/files/kiron-atom-tellian-biography.pdf', 'help' => 'Path of the PDF on the website. Leave empty to hide the card.', 'optional' => true],
+                ]],
                 ['key' => 'blocks', 'type' => 'list', 'label' => 'Biography', 'item_label' => 'Block', 'item' => [
                     'one_of' => [
                         'para' => [
