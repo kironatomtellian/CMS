@@ -19,6 +19,9 @@ return [
         'session_lifetime' => 60 * 60 * 24 * 30,
     ],
 
+    // Public address of the website, for "View page" links. Leave empty to hide them.
+    'site_url' => 'https://kironatomtellian.com',
+
     // Paths on the server
     'paths' => [
         // Where the website repo is checked out on the server.

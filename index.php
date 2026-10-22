@@ -222,6 +222,9 @@ function route_editor(string $key): void {
             </div>
             <div class="panel__actions">
               <span class="panel__meta" data-status>Loaded.</span>
+              <?php if (!empty($schema['page']) && site_url()): ?>
+                <a class="btn btn--ghost" href="<?= h(site_url($schema['page'])) ?>" target="_blank" rel="noopener">View page ↗</a>
+              <?php endif; ?>
               <button type="button" class="btn btn--primary" data-action="save">Save</button>
             </div>
           </header>

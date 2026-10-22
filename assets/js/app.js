@@ -65,6 +65,12 @@
 
   // --- Path helpers --------------------------------------------------------
 
+  // Fields the form does not show (an image's size, a concert's notes) are
+  // carried over untouched, so saving never drops data the site still reads.
+  function keep(orig) {
+    return orig && typeof orig === "object" && !Array.isArray(orig) ? Object.assign({}, orig) : {};
+  }
+
   function getAt(obj, path) {
     let cur = obj;
     for (const seg of path) {
@@ -108,12 +114,27 @@
       oninput: onDirty,
     });
     ta.value = value == null ? "" : String(value);
+    if (field.counter === "words") {
+      const count = el("span", { class: "field__count" });
+      const update = () => {
+        const n = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+        count.textContent = n + " words";
+      };
+      ta.addEventListener("input", update);
+      update();
+      const node = wrapField(field, ta, () => coerce(field, ta.value));
+      node.append(count);
+      return node;
+    }
     return wrapField(field, ta, () => coerce(field, ta.value));
   }
 
   function renderSelect(field, value, onDirty) {
     const sel = el("select", { class: "field__select", onchange: onDirty });
-    (field.options || []).forEach(([v, label]) => {
+    const opts = (field.options || []).slice();
+    // A value the list doesn't know yet stays selectable instead of being replaced.
+    if (value != null && value !== "" && !opts.some(([v]) => String(v) === String(value))) opts.push([value, String(value)]);
+    opts.forEach(([v, label]) => {
       const o = el("option", { value: v, text: label });
       if (String(value ?? "") === String(v)) o.selected = true;
       sel.append(o);
@@ -215,7 +236,7 @@
       inner,
     ]);
     group._read = () => {
-      const out = {};
+      const out = keep(obj);
       reads.forEach(({ key, node }) => {
         const v = node._read();
         if (v === undefined) return;
@@ -237,9 +258,10 @@
     const itemNodes = []; // { node, read, kind? }
 
     function refreshLabels() {
-      itemNodes.forEach(({ node }, i) => {
-        const head = node.querySelector(".list__item-head strong");
+      itemNodes.forEach(({ node, summary }, i) => {
+        const head = node.querySelector(":scope > .list__item-head strong");
         if (head) head.textContent = (field.item_label || "Item") + " " + (i + 1);
+        if (summary) summary();
       });
       if (itemNodes.length === 0 && listBox.contains(empty) === false) {
         listBox.prepend(empty);
@@ -273,6 +295,8 @@
         },
       });
       itemNodes.push(entry);
+      // Long lists start folded, so a season reads as a list of dates.
+      if (items.length > 6 && initialValue !== undefined) entry.node.classList.add("list__item--folded");
       // Only this list's own add bar: a nested list inside an item has one too.
       if (addRow && addRow.parentNode === listBox) listBox.insertBefore(entry.node, addRow);
       else listBox.append(entry.node);
@@ -300,6 +324,23 @@
       ]);
     }
 
+    // Search across a long list (concerts, reviews, photos).
+    let search = null;
+    if (items.length > 8) {
+      search = el("input", {
+        class: "field__input list__search",
+        type: "search",
+        placeholder: "Search " + (field.item_label || "item").toLowerCase() + "s…",
+        oninput: () => {
+          const q = search.value.trim().toLowerCase();
+          itemNodes.forEach(({ node }) => {
+            node.hidden = Boolean(q) && !node.textContent.toLowerCase().includes(q) &&
+              ![...node.querySelectorAll("input, textarea")].some((i) => i.value.toLowerCase().includes(q));
+          });
+        },
+      });
+    }
+
     // Seed existing items
     items.forEach((v) => {
       let kind;
@@ -315,6 +356,7 @@
 
     const wrap = el("div", { class: "field" }, [
       field.label ? el("span", { class: "field__label", text: field.label }) : null,
+      search,
       listBox,
       field.help ? el("span", { class: "field__help", text: field.help }) : null,
     ]);
@@ -323,8 +365,13 @@
   }
 
   function buildListItem(parentField, itemSpec, initialValue, kind, onDirty, hooks) {
-    const head = el("div", { class: "list__item-head" }, [
+    const summaryEl = el("span", { class: "list__item-summary" });
+    const head = el("div", { class: "list__item-head", onclick: (e) => {
+      if (e.target.closest("button")) return;
+      node.classList.toggle("list__item--folded");
+    } }, [
       el("strong", { text: (parentField.item_label || "Item") }),
+      summaryEl,
       el("div", { class: "list__item-actions" }, [
         el("button", { class: "icon-btn", type: "button", title: "Move up", "data-act": "up", onclick: () => hooks.move(-1) }, "↑"),
         el("button", { class: "icon-btn", type: "button", title: "Move down", "data-act": "down", onclick: () => hooks.move(1) }, "↓"),
@@ -349,7 +396,7 @@
         body.append(node);
       });
       read = () => {
-        const out = { kind };
+        const out = Object.assign(keep(initialValue), { kind });
         reads.forEach(({ key, node }) => {
           const v = node._read();
           if (v === undefined) return;
@@ -372,7 +419,7 @@
         body.append(node);
       });
       read = () => {
-        const out = {};
+        const out = keep(initialValue);
         reads.forEach(({ key, node }) => {
           const v = node._read();
           if (v === undefined) return;
@@ -383,7 +430,20 @@
     }
 
     const node = el("div", { class: "list__item" }, [head, body]);
-    return { node, read };
+    // One line that says what the item is, e.g. "2027-05-05 · Vienna".
+    const summary = () => {
+      let v;
+      try { v = read(); } catch (e) { return; }
+      if (v == null) return;
+      if (typeof v !== "object") { summaryEl.textContent = String(v).slice(0, 90); return; }
+      const parts = ["date", "city", "name", "title", "publication", "label", "venue", "alt", "src", "body", "quote"]
+        .map((k) => v[k]).filter((x) => typeof x === "string" && x.trim()).slice(0, 2);
+      summaryEl.textContent = parts.join(" · ").slice(0, 90);
+    };
+    body.addEventListener("input", summary);
+    body.addEventListener("change", summary);
+    summary();
+    return { node, read, summary };
   }
 
   // --- Coercion ------------------------------------------------------------
@@ -468,7 +528,7 @@
         editorBody.append(node);
       });
       rootRead = () => {
-        const out = {};
+        const out = keep(payload.data);
         reads.forEach(({ key, node }) => {
           const v = node._read();
           if (v === undefined) return;
@@ -509,6 +569,13 @@
   }
 
   // Warn on unload when dirty
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s" && saveBtn) {
+      e.preventDefault();
+      saveBtn.click();
+    }
+  });
+
   window.addEventListener("beforeunload", (e) => {
     if (dirty) {
       e.preventDefault();

@@ -119,6 +119,62 @@ function content_checks(): array {
         // A missing file is reported on the section cards.
     }
 
+    // 4. The red word of a big quote has to appear in the quote itself.
+    foreach (['home' => ['pressFeature', 'lead'], 'press' => ['lead']] as $key => $path) {
+        try {
+            $lead = data_load($key)['data'];
+        } catch (Throwable $e) {
+            continue;
+        }
+        foreach ($path as $seg) {
+            $lead = is_array($lead) ? ($lead[$seg] ?? null) : null;
+        }
+        if (is_array($lead) && !empty($lead['emphasis']) && strpos((string)($lead['quote'] ?? ''), (string)$lead['emphasis']) === false) {
+            $issues[] = [
+                'level' => 'fix',
+                'text' => "The red word “{$lead['emphasis']}” is not in the big quote on " . schemas()[$key]['title'],
+                'key' => $key,
+                'fix' => 'Edit quote',
+            ];
+        }
+    }
+
+    // 5. Pictures the site points to but cannot find.
+    global $config;
+    $public = rtrim($config['paths']['site_repo'], '/') . '/apps/public/public';
+    foreach (schema_files() as $key => $file) {
+        try {
+            $data = data_load($key)['data'];
+        } catch (Throwable $e) {
+            continue;
+        }
+        $missingImgs = [];
+        array_walk_recursive($data, function ($v) use ($public, &$missingImgs) {
+            if (is_string($v) && preg_match('#^/img/[^\s]+\.(jpe?g|png|webp|gif|avif)$#i', $v) && !is_file($public . $v)) {
+                $missingImgs[] = basename($v);
+            }
+        });
+        if ($missingImgs) {
+            $issues[] = [
+                'level' => 'fix',
+                'text' => count($missingImgs) . ' missing ' . (count($missingImgs) === 1 ? 'picture' : 'pictures') . ' on ' . schemas()[$key]['title'] . ': ' . implode(', ', array_slice(array_unique($missingImgs), 0, 3)),
+                'key' => $key,
+                'fix' => 'Upload',
+            ];
+        }
+    }
+
+    // 6. Upcoming concerts without a city show the hall name in big type.
+    $noCity = array_filter(upcoming_concerts(), fn($c) => empty($c['city']));
+    if ($noCity) {
+        $issues[] = [
+            'level' => 'info',
+            'text' => count($noCity) . ' upcoming ' . (count($noCity) === 1 ? 'concert has' : 'concerts have') . ' no city, so the hall name is shown instead',
+            'key' => 'concerts-upcoming',
+            'fix' => 'Add cities',
+        ];
+    }
+
     return $issues;
 }
 

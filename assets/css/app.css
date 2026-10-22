@@ -224,7 +224,17 @@ pre {
   font-size: 13px;
   color: var(--ink-2);
 }
-.list__item-head strong { color: var(--ink); font-weight: 500; }
+.list__item-head { cursor: pointer; gap: 12px; }
+.list__item-head strong { color: var(--ink); font-weight: 500; white-space: nowrap; }
+.list__item-summary {
+  flex: 1; min-width: 0;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  color: var(--ink-3);
+}
+.list__item--folded > .list__item-body { display: none; }
+.list__item--folded > .list__item-head { border-bottom: 0; }
+.list__search { margin-bottom: 8px; }
+.field__count { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
 .list__item-body { padding: 14px 14px 4px; }
 .list__item-actions { display: flex; gap: 4px; align-items: center; }
 .icon-btn {
@@ -364,10 +374,10 @@ body { font-size: 16px; }
   border-bottom: 0;
 }
 .topbar__brand {
-  font-style: italic;
   font-weight: 400;
-  font-size: 24px;
+  font-size: 22px;
 }
+.topbar__brand em { font-style: italic; }
 .topbar__brand span {
   font-family: var(--font-mono);
   font-style: normal;
